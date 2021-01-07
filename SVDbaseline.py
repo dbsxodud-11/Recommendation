@@ -3,7 +3,7 @@ import pandas as pd
 import math
 from utils import *
 
-def svd(train_data, test_data, n_factors) :
+def SVDbaseline(train_data, test_data, n_factors) :
 
     train_df, n_users, n_items = get_data(train_data)
 
@@ -40,9 +40,9 @@ def svd(train_data, test_data, n_factors) :
         target_value = 0
         for user_id, item_id, rating in list(train_df.values) :
 
-            r_ui_bar = mu + b_u[user_id-1] + b_i[item_id-1] + np.dot(q_u[user_id-1], p_i[item_id-1])
+            r_hat_ui = mu + b_u[user_id-1] + b_i[item_id-1] + np.dot(q_u[user_id-1], p_i[item_id-1])
 
-            err_ui = rating - r_ui_bar
+            err_ui = rating - r_hat_ui
             target_value += (err_ui)**2
 
             # Update
@@ -62,11 +62,11 @@ def svd(train_data, test_data, n_factors) :
     for user_id, item_id, rating in list(test_df.values) :
         rmse += (rating - (mu + b_u[user_id-1] + b_i[item_id-1] + np.dot(q_u[user_id-1], p_i[item_id-1])))**2
     rmse = math.sqrt(rmse / size)
-    print(rmse) # 0.8195211770068072
+    print(rmse) # 0.4875874731082927
 
 if __name__ == "__main__" :
 
     train_data = "./ml-100k/sample.data"
     test_data = "./ml-100k/sample.data"
     n_factors = 100
-    svd(train_data, test_data, n_factors)
+    SVDbaseline(train_data, test_data, n_factors)
