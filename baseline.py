@@ -50,7 +50,7 @@ def baseline_estimates(train_data, test_data) :
     rmse = 0
     size = len(test_df.values)
     for user_id, item_id, rating in list(test_df.values) :
-        rmse += (rating - (test_avg_rating + user_bias[user_id-1] + item_bias[item_id-1]))**2
+        rmse += (rating - (train_avg_rating + user_bias[user_id-1] + item_bias[item_id-1]))**2
     rmse = math.sqrt(rmse / size)
     print(rmse) # 0.9577214812556744
 
