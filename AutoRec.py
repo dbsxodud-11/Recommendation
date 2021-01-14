@@ -53,7 +53,7 @@ class AutoRec(nn.Module) :
 
         self.autoencoder = MLP(self.input_dim, self.input_dim, self.hidden, self.layer_type, self.activ_type)
 
-        self.epochs = 300
+        self.epochs = 200
         self.batch_size = 256
         self.lr = 0.01
     
@@ -94,7 +94,7 @@ class AutoRec(nn.Module) :
                 self.optimizer.step()
 
                 batch_cost += loss.item()
-            # print(epoch+1, batch_cost)
+            print(epoch+1, batch_cost)
             # print(batch_pred_matrix[:4][:4])
         
         # return torch.transpose(self.autoencoder(self.rating_matrix.T), 0, 1)
@@ -114,10 +114,11 @@ class AutoRec(nn.Module) :
 
 if __name__ == "__main__" :
 
-    train_data = "./ml-100k/u1.base"
-    test_data = "./ml-100k/u1.test"
+    train_data = "./ml-1m/ratings.dat"
+    test_data = "./ml-1m/ratings.dat"
 
     train_df, n_users, n_items = get_data(train_data)
+    # print(train_df)
     rating_matrix = [[0 for _ in range(n_items)] for _ in range(n_users)]
 
     for user_id, item_id, rating in list(train_df.values) :
@@ -125,10 +126,10 @@ if __name__ == "__main__" :
     rating_matrix = np.array(rating_matrix)
 
     hiddens = [20, 40, 80, 100, 200, 300, 400, 500]
-    activ_types = ["relu", "sigmoid"]
+    activ_types = ["relu"]
     accuracy = []
     for activ_type in activ_types :
-        autorec = AutoRec(rating_matrix, hidden=500, layer_type="linear", activ_type=activ_type)
+        autorec = AutoRec(rating_matrix, hidden=500, layer_type="linear", activ_type="relu")
         autorec.train_model()
         
         test_df, n_users, n_items = get_data(test_data)

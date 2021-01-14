@@ -9,7 +9,7 @@ def get_data(data) :
     f = open(data, "r")
     while True :
         line = f.readline()
-        line = list(map(int, line[:-2].split("\t")[:-1]))
+        line = list(map(int, line[:-2].split("::")[:-1]))
         if not line : break
         df.append(line)
 
@@ -17,8 +17,8 @@ def get_data(data) :
     df = pd.DataFrame(df, columns = ["user_id", "item_id", "rating"])
 
     # Other Information
-    n_users = 943
-    n_items = 1682
+    n_users = max(df["user_id"].values)+1
+    n_items = max(df["item_id"].values)+1
 
     return df, n_users, n_items
 
