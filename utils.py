@@ -17,8 +17,8 @@ def get_data(data) :
     df = pd.DataFrame(df, columns = ["user_id", "item_id", "rating"])
 
     # Other Information
-    n_users = 4
-    n_items = 4
+    n_users = 943
+    n_items = 1682
 
     return df, n_users, n_items
 

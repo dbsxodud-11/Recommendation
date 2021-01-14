@@ -10,66 +10,40 @@ import pandas as pd
 class MLP(nn.Module) :
 
     def __init__(self, input_dims, output_dims, lambda_w) :
-        # super(MLP, self).__init__()
+        super(MLP, self).__init__()
 
-        # self.layers = nn.ModuleList()
-
-        # for input_dim, output_dim in zip(input_dims, output_dims) :
-        #     layer = nn.Linear(input_dim, output_dim)
-        #     layer.weight.data = nn.Parameter(torch.normal(0, 1/lambda_w, size=(output_dim, input_dim)))
-        #     layer.bias.data = nn.Parameter(torch.normal(0, 1/lambda_w, size=(1, output_dim)).squeeze())
-        #     self.layers.append(layer)
-
-        # self.activations = nn.ModuleDict({
-        #     "sigmoid" : nn.Sigmoid(),
-        #     "dropout" : nn.Dropout(p=0.1)
-        # })
-
-        self.layers = []
+        self.layers = nn.ModuleList()
 
         for input_dim, output_dim in zip(input_dims, output_dims) :
+            layer = nn.Linear(input_dim, output_dim)
+            layer.weight.data = nn.Parameter(torch.normal(0, 1/lambda_w, size=(output_dim, input_dim)))
+            layer.bias.data = nn.Parameter(torch.normal(0, 1/lambda_w, size=(283, output_dim)))
+            self.layers.append(layer)
 
-            weight = np.random.normal(0, 1/lambda_w, size=(input_dim, output_dim))
-            bias = np.random.normal(0, 1/lambda_w, size=output_dim)
-
-            self.layers.append((weight, bias))
+        self.activations = nn.ModuleDict({
+            "sigmoid" : nn.Sigmoid(),
+            "dropout" : nn.Dropout(p=0.1)
+        })
 
     def encode(self, x) :
 
-        for weight, bias in self.layers[:2] :
+        for i, layer in enumerate(self.layers[:2]) :
             # print(x.shape)
-            # x = layer(x)
-            # x = self.activations["sigmoid"](x)
-            # x = self.activations["dropout"](x)
-
-            x = np.matmul(x, weight)
-            x = x + bias
-            x = self.sigmoid(x)
-            x = self.dropout(x, 0.1)
+            x = layer(x)
+            x = self.activations["sigmoid"](x)
+            x = self.activations["dropout"](x)
 
         return x
 
     def decode(self, x) :
 
-        for weight, bias in self.layers[2:] :
-            # x = layer(x)
-            # # print(x.shape)
-            # x = self.activations["sigmoid"](x)
-            # x = self.activations["dropout"](x)
-
-            x = np.matmul(x, weight)
-            x = x + bias
-            x = self.sigmoid(x)
-            x = self.dropout(x, 0.1)
+        for i, layer in enumerate(self.layers[2:]) :
+            x = layer(x)
+            # print(x.shape)
+            x = self.activations["sigmoid"](x)
+            x = self.activations["dropout"](x)
 
         return x
-
-    def sigmoid(self, x) :
-
-        return np.div(1, 1+np.exp(x))
-
-    def dropout(self, x, drop_ratio) :
-        
 
 class CDL(nn.Module) :
 
@@ -94,10 +68,13 @@ class CDL(nn.Module) :
 
         self.a = 1
         self.b = 0.01
-        self.P = 1 # sparse(1) and dense(10) setting
+        self.P = 10 # sparse(1) and dense(10) setting
 
         self.n_users = rating_matrix.shape[0]
         self.n_items = rating_matrix.shape[1]
+
+        self.U = nn.Parameter(torch.zeros((self.n_users, self.k)))
+        self.V = nn.Parameter(torch.zeros((self.n_items, self.k)))
 
         # Deep Learning Network
         input_dims = [self.n_input, self.n_hidden_1, self.n_hidden_2, self.n_hidden_1]
@@ -116,8 +93,10 @@ class CDL(nn.Module) :
         self.confidence = self.b * np.ones((self.n_users, self.n_items))
         self.confidence[np.where(self.rating_matrix>0)] = self.a
 
-        self.epochs = 10
-        self.batch_size = 256
+        self.epochs = 200
+        self.batch_size = 283
+
+        self.optimizer = optim.Adam(list(self.neural_network.parameters()) + [self.U, self.V], lr=self.learning_rate)
 
     def train_model(self) :
 
@@ -131,9 +110,9 @@ class CDL(nn.Module) :
 
         # U = torch.ones((self.n_users, self.k), requires_grad=True)
         # V = torch.ones((self.n_items, self.k), requires_grad=True)
-        U = nn.Parameter(torch.zeros((self.n_users, self.k)))
-        V = nn.Parameter(torch.zeros((self.n_items, self.k)))
-
+        # U = nn.Parameter(torch.zeros((self.n_users, self.k)))
+        # V = nn.Parameter(torch.zeros((self.n_items, self.k)))
+        # print(self.X_0.shape)
         for epoch in range(self.epochs) :
             batch_cost = 0
 
@@ -141,6 +120,7 @@ class CDL(nn.Module) :
                 batch_idx = random_idx[i:i+self.batch_size]
                 
                 batch_X_0 = self.X_0[batch_idx, :]
+                # print(batch_X_0.shape)
                 batch_X_2 = self.neural_network.encode(batch_X_0)
                 batch_X_4 = self.neural_network.decode(batch_X_2)
                 batch_X_c = self.X_c[batch_idx, :]
@@ -155,11 +135,11 @@ class CDL(nn.Module) :
                 batch_C = self.confidence[:, batch_idx]
                 batch_C = torch.tensor(batch_C, dtype=torch.float32)
 
-                batch_V = V[batch_idx, :]
+                batch_V = self.V[batch_idx, :]
 
                 l2_loss = nn.MSELoss(reduction="sum")
                 
-                loss_1 = 0.5*self.lambda_u*l2_loss(U, torch.zeros((self.n_users, self.k)))
+                loss_1 = 0.5*self.lambda_u*l2_loss(self.U, torch.zeros((self.n_users, self.k)))
         
                 loss_2 = 0.0
                 for j, layer in enumerate(self.neural_network.layers) :
@@ -170,7 +150,7 @@ class CDL(nn.Module) :
 
                 loss_4 = 0.5*self.lambda_n*l2_loss(batch_X_c, batch_X_4)
 
-                batch_err = batch_R - torch.matmul(U, torch.transpose(batch_V, 0, 1))
+                batch_err = batch_R - torch.matmul(self.U, torch.transpose(batch_V, 0, 1))
                 loss_5 = 0.5*torch.sum(torch.mul(batch_C, torch.mul(batch_err, batch_err)))
                 # print(loss_1)
                 # print(loss_2)
@@ -183,18 +163,17 @@ class CDL(nn.Module) :
                 # print(U)
                 # print(V)
                 # print(self.neural_network.parameters())
-                optimizer = optim.Adam(list(self.neural_network.parameters()) + [U, V], lr = self.learning_rate)
 
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
 
                 batch_cost += loss.item()
 
 
             print(epoch+1, batch_cost)
 
-        return torch.matmul(U, torch.transpose(V, 0, 1)).detach().numpy()
+        return torch.matmul(self.U, torch.transpose(self.V, 0, 1)).detach().numpy()
 
     def add_noise(self, item_info_matrix) :
 
@@ -269,6 +248,8 @@ if __name__ == "__main__" :
     rating_matrix_true = rating_matrix.copy()
     cdl = CDL(rating_matrix_true, item_info_matrix)
     rating_matrix_pred = cdl.train_model()
+    # print(rating_matrix_pred[:20,:20])
+    # print(rating_matrix_true[:20,:20])
 
     # Get Performance
     get_performance(rating_matrix, rating_matrix_pred)
