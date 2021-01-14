@@ -125,11 +125,11 @@ if __name__ == "__main__" :
         rating_matrix[user_id-1][item_id-1] = rating
     rating_matrix = np.array(rating_matrix)
 
-    hiddens = [20, 40, 80, 100, 200, 300, 400, 500]
+    hiddens = [10, 20, 40, 80, 100, 200, 300, 400, 500]
     activ_types = ["relu"]
     accuracy = []
-    for activ_type in activ_types :
-        autorec = AutoRec(rating_matrix, hidden=500, layer_type="linear", activ_type="relu")
+    for hidden in hiddens :
+        autorec = AutoRec(rating_matrix, hidden=hidden, layer_type="linear", activ_type="relu")
         autorec.train_model()
         
         test_df, n_users, n_items = get_data(test_data)
