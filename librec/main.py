@@ -69,27 +69,25 @@ class LibRec :
         if len(ratios) == 2 :
             self.data = data_splitter.getRatio(trainRatio, testRatio)
         else :
-            self.data = data_splitter.getRatio(trainRatio, validRatio, testRatio)
-        
+            self.data = data_splitter.getRatio(trainRatio, testRatio, validRatio)
+
         # Write Matrix
         dirPath = self.rateDAO.getDataDirectory()
         self.writeMatrix(self.data[0], dirPath + "train.txt")
 
         if len(ratios) == 2 :
-            self.writeMatrix(self.data[1], dirpath + "test.txt")
+            self.writeMatrix(self.data[1], dirPath + "test.txt")
         else :
             self.writeMatrix(self.data[1], dirpath + "validation.txt")
             self.writeMatrix(self.data[2], dirPath + "test.txt")
 
     def readData(self) :
 
-        rateDAO = DataDAO(self.config.get("DATASET_CONFIG", "ratings")) # access to rating data
+        self.rateDAO = DataDAO(self.config.get("DATASET_CONFIG", "ratings")) # access to rating data
         columns = self.config.get("DATASET_CONFIG", "columns_to_use").rstrip().split(" ")    # data columns to use
         threshold = int(self.config.get("DATASET_CONFIG", "rating_threshold"))
 
-        self.rateMatrix = rateDAO.readData(columns, threshold)
-        
-        self.Recommender = Recommender(self.rateMatrix, rateDAO, threshold)
+        self.rateMatrix = self.rateDAO.readData(columns, threshold)
 
     def runAlgorithm(self) :
 
@@ -101,10 +99,33 @@ class LibRec :
         elif method == "test" : # use test-set
             assert len(self.data) == 2, "train and test set only"
         
-        algorithm = self.getRecommneder(self.data, -1)
+        algorithm = self.getRecommender(self.data, -1)
         algorithm.execute()
 
         self.printEvalInfo(algorithm, algorithm.measures)
+
+    def getRecommender(self, data, fold) :
+
+        self.algo_name = self.config["ALGORITHM_CONFIG", "name"]
+        
+        self.writeData(data[0], data[1], fold)
+
+        print(f"Algorithm : {self.algo_name}")
+        if self.algo_name == "global_avg" :
+            return GlobalAvg(data[0], data[1], fold)
+        elif self.algo_name == "user_knn" :
+            return UserkNN(data[0], data[1], fold)
+
+    def writeMatrix(self, data, path) :
+
+        f = open(path, "w")
+        for i in range(data.n_rows) :
+            for j in range(data.rowPtr[i], data.rowPtr[i+1]) :
+                user = self.rateDAO.userRow.get(i)
+                item = self.rateDAO.itemCol.get(data.colIdx[j])
+                val = data.rowData[j]
+                f.write(f"{user}::{item}::{val}\n")
+        f.close()
 
 
 if __name__ == "__main__" :

@@ -14,6 +14,8 @@ class DataDAO :
         self.scaleDist = set()
         self.userIds = userIds
         self.itemIds = itemIds
+        self.userRow = {}
+        self.itemCol = {}
 
     def readData(self, columns, threshold) :
 
@@ -37,12 +39,14 @@ class DataDAO :
                 if user not in self.userIds :
                     row = len(self.userIds)
                     self.userIds[user] = row
+                    self.userRow[row] = user
                 else :
                     row = self.userIds.get(user)
                 col = 0
                 if item not in self.itemIds :
                     col = len(self.itemIds)
                     self.itemIds[item] = col
+                    self.itemCol[col] = item
                 else :
                     col = self.itemIds.get(item)
                 
@@ -61,4 +65,10 @@ class DataDAO :
         rateMatrix = SparseMatrix(n_users, n_items, dataTable, colMap, rowMap)
 
         return rateMatrix
+
+    def getDataDirectory(self) :
+
+        data_dir = self.path.strip().split("/")
+        data_dir = "/".join(data_dir[:-1]) + "/"
+        return data_dir
 
