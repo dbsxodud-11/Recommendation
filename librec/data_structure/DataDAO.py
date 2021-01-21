@@ -57,12 +57,14 @@ class DataDAO :
         numRatings = len(self.scaleDist)
         ratingScale = list(self.scaleDist)
         ratingScale.sort()
+        self.minRate = ratingScale[0]
+        self.maxRate = ratingScale[-1]
 
         # print(dataTable, self.userIds, self.itemIds, colMap, rowMap)
 
         n_users = len(self.userIds)
         n_items = len(self.itemIds)
-        rateMatrix = SparseMatrix(n_users, n_items, dataTable, colMap, rowMap)
+        rateMatrix = SparseMatrix(n_users, n_items, dataTable, colMap, rowMap, self)
 
         return rateMatrix
 

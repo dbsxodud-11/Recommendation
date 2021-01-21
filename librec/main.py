@@ -1,4 +1,4 @@
-from algorithms.baseline import *
+from algorithms.baseline.GlobalAvg import *
 from algorithms.both_cases import *
 from algorithms.item_ranking import *
 from algorithms.rating_prediction import *
@@ -28,21 +28,21 @@ def parse_args() :
 class LibRec :
 
     def __init__(self) :
-        isMeasureOnly = False   # only print measurements
-        tempDirPath = "./Results/"  # output directory path
+        self.isMeasureOnly = False   # only print measurements
+        self.tempDirPath = "./results/"  # output directory path
 
     def execute(self, args) :
 
         self.cmdLine(args) # process librec arguments
 
-        self.preset(self.config)    # reset general settings          
+        # self.preset(self.config)    # reset general settings          
         self.runAlgorithm()         # run a speicific algorithm
 
-        filename = self.algorithm + "_" +  str(self.trainRatio) + "_"
-        if self.validRatio is not None :
-            filename += "_" + str(self.validRatio)
-        result_dir = tempDirPath + filename
-        shutil.copy("result.txt", result_dir)
+        filename = self.algo_name + "_" +  str(self.trainRatio)
+        # if self.validRatio is not None :
+        #     filename += "_" + str(self.validRatio)
+        result_dir = self.tempDirPath + filename
+        shutil.copy(f"{self.rateDAO.getDataDirectory()}result.txt", result_dir)
 
     def cmdLine(self, args) :
 
@@ -63,13 +63,16 @@ class LibRec :
             validRatio = float(ratios[1])
             testRatio = float(ratios[2])
             assert trainRatio + validRatio + testRatio == 1.0, "sum is not equal to 1"
+            self.validRatio = validRatio
+        self.trainRatio = trainRatio
+        self.testRatio = testRatio
 
         data_splitter = DataSplitter(self.rateMatrix)
         self.data = []
         if len(ratios) == 2 :
-            self.data = data_splitter.getRatio(trainRatio, testRatio)
+            self.data = data_splitter.getRatio(self.trainRatio, self.testRatio)
         else :
-            self.data = data_splitter.getRatio(trainRatio, testRatio, validRatio)
+            self.data = data_splitter.getRatio(self.trainRatio, self.testRatio, self.validRatio)
 
         # Write Matrix
         dirPath = self.rateDAO.getDataDirectory()
@@ -91,7 +94,7 @@ class LibRec :
 
     def runAlgorithm(self) :
 
-        method = self.config["EVALUATE_CONFIG", "method"]
+        method = self.config.get("EVALUATE_CONFIG", "method")
         if method == "cv" : # cross-validation
             self.runCrossValidation()
         elif method == "loo" : # leave-one-out
@@ -102,13 +105,13 @@ class LibRec :
         algorithm = self.getRecommender(self.data, -1)
         algorithm.execute()
 
-        self.printEvalInfo(algorithm, algorithm.measures)
+        self.printEvalInfo(algorithm.measures)
 
     def getRecommender(self, data, fold) :
 
-        self.algo_name = self.config["ALGORITHM_CONFIG", "name"]
+        self.algo_name = self.config.get("ALGORITHM_CONFIG", "name")
         
-        self.writeData(data[0], data[1], fold)
+        # self.writeData(data[0], data[1], fold)
 
         print(f"Algorithm : {self.algo_name}")
         if self.algo_name == "global_avg" :
@@ -127,6 +130,9 @@ class LibRec :
                 f.write(f"{user}::{item}::{val}\n")
         f.close()
 
+    def printEvalInfo(self, measures) :
+
+        print(measures)
 
 if __name__ == "__main__" :
 

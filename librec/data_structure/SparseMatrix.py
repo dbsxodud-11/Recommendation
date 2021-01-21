@@ -1,15 +1,29 @@
 from data_structure.SparseVector import *
+from data_structure.MatrixEntry import *
 
 from bisect import bisect_left, bisect_right
 
 class SparseMatrix :
 
-    def __init__(self, rows, cols, dataTable, colMap, rowMap) :
+    def __init__(self, rows, cols, dataTable, colMap, rowMap, DataDAO) :
 
         self.n_rows = rows
         self.n_cols = cols
 
         self.construct(dataTable, colMap, rowMap)
+        self.DataDAO = DataDAO
+
+    # Iteration
+    def __iter__(self) :
+        self.index = 0
+        return self
+
+    def __next__(self) :
+        if self.index >= self.size() :
+            raise StopIteration
+        entry = self.getEntry(self.index)
+        self.index += 1
+        return entry
 
     def construct(self, dataTable, colMap, rowMap) :
 
@@ -80,9 +94,9 @@ class SparseMatrix :
 
     def getValue(self, row, col) :
 
-        index = bisect_left(self.colIdx, col, self.rowPtr[row], self.rowPtr[row+1])
-        if index >= 0 :
-            return self.rowData[index]
+        idx = bisect_left(self.colIdx, col, self.rowPtr[row], self.rowPtr[row+1])
+        if idx >= 0 :
+            return self.rowData[idx]
         else :
             return 0.0
 
@@ -130,3 +144,18 @@ class SparseMatrix :
         self.colPtr = new_colPtr
         self.rowIdx = new_rowIdx
         self.colData = new_colData
+
+    def size(self) :
+        assert len(self.rowData) == len(self.colData), "rowData and colData unmatched"
+        return len(self.rowData)
+
+    def sum(self) :
+        assert sum(self.rowData) == sum(self.colData), "rowData and colData unmatched"
+        return sum(self.rowData)
+
+    def getEntry(self, idx) :
+        
+        row = bisect_left(self.rowPtr, idx)
+        col = idx
+        val = self.rowData[idx]
+        return MatrixEntry(row, col, val)
