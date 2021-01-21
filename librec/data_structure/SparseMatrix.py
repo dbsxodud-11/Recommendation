@@ -122,8 +122,8 @@ class SparseMatrix :
         
         self.rowPtr = new_rowPtr
         self.colIdx = new_colIdx
-        self.rowData = new_rowData
-        
+        self.rowData = list(filter(lambda x : x!=0, new_rowData))
+   
         n_table = len(self.colData)
 
         # CCS(Compressed Column Storage)
@@ -143,7 +143,7 @@ class SparseMatrix :
             new_colPtr[i+1] = new_idx
         self.colPtr = new_colPtr
         self.rowIdx = new_rowIdx
-        self.colData = new_colData
+        self.colData = list(filter(lambda x : x!=0, new_colData))
 
     def size(self) :
         assert len(self.rowData) == len(self.colData), "rowData and colData unmatched"
@@ -155,7 +155,15 @@ class SparseMatrix :
 
     def getEntry(self, idx) :
         
-        row = bisect_left(self.rowPtr, idx)
-        col = idx
+        if idx == 0 :
+            row = -1
+            for i in self.rowPtr :
+                if i != 0 :
+                    break
+                else :
+                    row += 1
+        else :
+            row = bisect_right(self.rowPtr, idx)-1
+        col = self.colIdx[idx]
         val = self.rowData[idx]
         return MatrixEntry(row, col, val)

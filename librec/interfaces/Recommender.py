@@ -48,7 +48,6 @@ class Recommender :
         
         # Create Output File
         f = open(f"{self.testMatrix.DataDAO.getDataDirectory()}result.txt", "w")
-        
         for entry in self.testMatrix :
 
             true_rate = entry.val
