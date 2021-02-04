@@ -63,12 +63,20 @@ x1 = np.random.normal(size=(3, 4))
 # print(np.matmul(np.transpose(expanded_lookup, axes=[0,2,1]), expanded_lookup))
 
 
-a = np.array([[0,1,0,0],[0,0,1,1],[0,0,1,0]])
-a = torch.tensor(a)
-print(a.view(3, 1, 4))
-# a = sparse.csr_matrix(a)
-# print(a.indices)
-# print(a.indptr)
+# a = np.array([[0,1,0,0],[0,0,1,1],[0,0,1,0]])
+# a = torch.tensor(a)
+# print(a.view(3, 1, 4))
+# # a = sparse.csr_matrix(a)
+# # print(a.indices)
+# # print(a.indptr)
+
+# a = np.array([[1],[3],[5]])
+# print(np.sum(a, axis=1))
+
+a = np.array([[1, 3, 5],[1, 3, 5]])
+b = np.array([[2, 4, 6], [2, 4, 6]])
+
 
 a = np.array([[1],[3],[5]])
-print(np.sum(a, axis=1))
+b = np.array([[1, 2],[2, 4],[3, 6]])
+print(a*b)

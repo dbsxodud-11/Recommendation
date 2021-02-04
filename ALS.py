@@ -86,9 +86,9 @@ class ALS :
 
 if __name__ == "__main__" :
     performance_list = []
-    n_factors = [10, 20, 40, 80, 160]
+    n_factors = [10, 20, 30, 40, 50]
     for n_factor in n_factors :
-        als = ALS("./ml-100k/", n_factor=n_factor, alpha=40, reg=1.0/n_factor, seed=10)
+        als = ALS("./ml-100k/", n_factor=n_factor, alpha=40, reg=0.002, seed=10)
         performance = als.run()
         performance_list.append(performance)
 
