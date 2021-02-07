@@ -73,10 +73,16 @@ x1 = np.random.normal(size=(3, 4))
 # a = np.array([[1],[3],[5]])
 # print(np.sum(a, axis=1))
 
-a = np.array([[1, 3, 5],[1, 3, 5]])
-b = np.array([[2, 4, 6], [2, 4, 6]])
+# a = np.array([[1, 3, 5],[1, 3, 5]])
+# b = np.array([[2, 4, 6], [2, 4, 6]])
 
 
-a = np.array([[1],[3],[5]])
-b = np.array([[1, 2],[2, 4],[3, 6]])
+# a = np.array([[1],[3],[5]])
+# b = np.array([[1, 2],[2, 4],[3, 6]])
+# print(a*b)
+
+a = np.random.normal(size=(4, 3, 3))
+b = np.array([1, 2, 3, 4]).reshape(-1, 1, 1)
+print(b)
+print(a)
 print(a*b)
