@@ -52,12 +52,13 @@ class ALS :
         self.Y = np.random.normal(scale=1.0/self.f, size=(self.n_items, self.f))
         mat_Y = self.train_csr
         mat_X = self.train_csr.transpose(copy=True).tocsr()
-        for episode in tqdm(range(10)) :
+        for episode in tqdm(range(20)) :
             self.X = self.train_by_ALS(self.Y, mat_Y)
             self.Y = self.train_by_ALS(self.X, mat_X)
             # Calculate Loss
             loss = np.sum(np.multiply(self.train_conf, np.square(self.train_pref-np.matmul(self.X, self.Y.T)))) + self.reg * (np.sum(np.square(self.X)) + np.sum(np.square(self.Y)))
-            print("Episode :  %d   Loss : %f" %(episode, loss))
+            # print("Episode :  %d   Loss : %f" %(episode, loss))
+        print(loss)
 
     def train_by_ALS(self, W, mat) :
         W2 = np.matmul(W.T, W)
@@ -88,7 +89,7 @@ if __name__ == "__main__" :
     performance_list = []
     n_factors = [10, 20, 30, 40, 50]
     for n_factor in n_factors :
-        als = ALS("../_data/ml-100k/", n_factor=n_factor, alpha=40, reg=10, seed=10)
+        als = ALS("../_data/ml-100k/", n_factor=n_factor, alpha=10, reg=100, seed=10)
         performance = als.run()
         performance_list.append(performance)
 

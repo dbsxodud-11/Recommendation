@@ -36,16 +36,16 @@ import random
 # print(len(list(filter(lambda x: x==2, action))))
 # print(len(list(filter(lambda x: x==3, action))))
 
-x = np.array([[1, 0, 0],[5, 2, 0],[0, 0, 3],[0, 0, 1]])
-x = sparse.csr_matrix(x)
-row = x
-col = x.transpose()
-# print(row)
-# print()
-# print(col)
-# print(col.tocsr())
+# x = np.array([[1, 0, 0],[5, 2, 0],[0, 0, 3],[0, 0, 1]])
+# x = sparse.csr_matrix(x)
+# row = x
+# col = x.transpose()
+# # print(row)
+# # print()
+# # print(col)
+# # print(col.tocsr())
 
-x1 = np.random.normal(size=(3, 4))
+# x1 = np.random.normal(size=(3, 4))
 # y = np.repeat(np.expand_dims(x1, axis=0), 3, axis=0)
 # print(x1)
 # print(y)
@@ -81,8 +81,32 @@ x1 = np.random.normal(size=(3, 4))
 # b = np.array([[1, 2],[2, 4],[3, 6]])
 # print(a*b)
 
-a = np.random.normal(size=(4, 3, 3))
-b = np.array([1, 2, 3, 4]).reshape(-1, 1, 1)
-print(b)
-print(a)
-print(a*b)
+# a = np.random.normal(size=(4, 3, 3))
+# b = np.array([1, 2, 3, 4]).reshape(-1, 1, 1)
+# print(b)
+# print(a)
+# print(a*b)
+
+# from itertools import combinations
+# a = [1, 2, 3]
+# print(combinations(a, 2))
+
+
+# x = np.random.normal(size=4)
+# print(x)
+# print(x.reshape(-1, 1))
+
+
+# x = np.random.normal(size=(3, 2, 2))
+# y = np.array([1, 2, 3]).reshape(-1, 1, 1)
+# print(x)
+# print(y*x)
+
+# z = np.random.binomial(n=1, p=0.8, size=x.shape)
+# print(np.multiply(x, z))
+# print(np.multiply(x, z^1))
+
+
+x = np.array([[1, 3, 2], [2, 1, 3], [1, 2, 3]])
+print(np.argsort(-x))
+print(3-np.argsort(x)-1)
