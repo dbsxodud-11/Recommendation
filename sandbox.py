@@ -107,6 +107,16 @@ import random
 # print(np.multiply(x, z^1))
 
 
-x = np.array([[1, 3, 2], [2, 1, 3], [1, 2, 3]])
-print(np.argsort(-x))
-print(3-np.argsort(x)-1)
+# x = np.array([[1, 3, 2], [2, 1, 3], [1, 2, 3]])
+# print(np.argsort(-x))
+# print(3-np.argsort(x)-1)
+
+# import pandas as pd
+# ratings = pd.read_csv("Collaborative_Filtering/_data/ml-1m/ratings.dat", header=None, seq="::", engine="python")
+# ratings.columns = ["iid", "movie_name", "genre"]
+# print(ratings[:5])
+
+x = np.random.normal(size=(3, 5))
+print(x)
+x[:, 5:] = 0.0
+print(x)

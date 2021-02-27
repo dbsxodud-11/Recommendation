@@ -6,6 +6,7 @@ import torch.optim as optim
 import random
 import matplotlib.pyplot as plt
 import pandas as pd
+from tqdm import tqdm
 
 class MLP(nn.Module) :
 
@@ -73,8 +74,8 @@ class CDL(nn.Module) :
         self.n_users = rating_matrix.shape[0]
         self.n_items = rating_matrix.shape[1]
 
-        self.U = nn.Parameter(torch.zeros((self.n_users, self.k)))
-        self.V = nn.Parameter(torch.zeros((self.n_items, self.k)))
+        self.U = np.random.normal(size=(self.n_users, self.k))
+        self.V = np.random.normal(size=(self.n_items, self.k))
 
         # Deep Learning Network
         input_dims = [self.n_input, self.n_hidden_1, self.n_hidden_2, self.n_hidden_1]
@@ -96,7 +97,7 @@ class CDL(nn.Module) :
         self.epochs = 200
         self.batch_size = 283
 
-        self.optimizer = optim.Adam(list(self.neural_network.parameters()) + [self.U, self.V], lr=self.learning_rate)
+        self.optimizer = optim.Adam(self.neural_network.parameters(), lr=self.learning_rate)
 
     def train_model(self) :
 
@@ -108,27 +109,28 @@ class CDL(nn.Module) :
 
         random_idx = np.random.permutation(self.n_items)
 
-        # U = torch.ones((self.n_users, self.k), requires_grad=True)
-        # V = torch.ones((self.n_items, self.k), requires_grad=True)
-        # U = nn.Parameter(torch.zeros((self.n_users, self.k)))
-        # V = nn.Parameter(torch.zeros((self.n_items, self.k)))
-        # print(self.X_0.shape)
-        for epoch in range(self.epochs) :
+        for epoch in tqdm(range(self.epochs)) :
             batch_cost = 0
+
+            for i in range(self.n_users) :
+                c_diag = np.diag(self.confidence[i, :])
+                term_1 = np.matmul(np.matmul(self.V.T, c_diag), self.V) + self.lambda_u*np.identity(self.k)
+                term_2 = np.matmul(np.matmul(self.V.T, c_diag), self.rating_matrix[i, :])
+                self.U[i, :] = np.linalg.solve(term_1, term_2)#np.matmul(np.linalg.inv(term_1), term_2)
+
+            for j in range(self.n_items) :
+                c_diag = np.diag(np.confidence[:, j])
+                term_1 = np.matmul(np.matmul(self.U.T, c_diag), self.U) + self.lambda_v*np.identity(self.k)
+                term_2 = np.matmul(np.matmul(self.U.T, c_diag), self.rating_matrix[:, j].reshape(-1, 1))
+                self.V[:, j] = np.mamtul(np.linalg.inv(term_1), term_2)
 
             for i in range(0, self.n_items, self.batch_size) :
                 batch_idx = random_idx[i:i+self.batch_size]
                 
                 batch_X_0 = self.X_0[batch_idx, :]
-                # print(batch_X_0.shape)
                 batch_X_2 = self.neural_network.encode(batch_X_0)
                 batch_X_4 = self.neural_network.decode(batch_X_2)
                 batch_X_c = self.X_c[batch_idx, :]
-
-                # print(batch_X_0)
-                # print(batch_X_2)
-                # print(batch_X_4)
-                # print(batch_X_c)
 
                 batch_R = self.rating_matrix[:, batch_idx]
                 batch_R = torch.tensor(batch_R, dtype=torch.float32)
@@ -152,17 +154,8 @@ class CDL(nn.Module) :
 
                 batch_err = batch_R - torch.matmul(self.U, torch.transpose(batch_V, 0, 1))
                 loss_5 = 0.5*torch.sum(torch.mul(batch_C, torch.mul(batch_err, batch_err)))
-                # print(loss_1)
-                # print(loss_2)
-                # print(loss_3)
-                # print(loss_4)
-                # print(loss_5)
-                # return 3
+
                 loss = loss_1 + loss_2 + loss_3 + loss_4 + loss_5
-                # print(loss) 
-                # print(U)
-                # print(V)
-                # print(self.neural_network.parameters())
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -182,8 +175,6 @@ class CDL(nn.Module) :
         x *= noise
 
         return x
-
-
 
 def get_performance(true_matrix, pred_matrix) :
 
@@ -207,23 +198,23 @@ def get_performance(true_matrix, pred_matrix) :
     plt.ylabel("Recall")
     plt.title("Performance of CDL in sparse setting")
     plt.legend()
-    plt.savefig("./data/citeulike-a/CDL_sparse.png")
+    plt.savefig("./_data/citeulike-a/CDL_sparse.png")
 
     df = pd.DataFrame(accuracy, columns=["accuracy"])
-    df.to_csv("./data/citeulike-a/CDL_sparse_accuracy.csv")                
+    df.to_csv("./_data/citeulike-a/CDL_sparse_accuracy.csv")                
                 
 
 if __name__ == "__main__" :
 
     # Data Processing
-    with open("./data/citeulike-a/vocabulary.dat", "r") as vocabulary_file :
+    with open("../_data/citeulike-a/vocabulary.dat", "r") as vocabulary_file :
         n_vocabulary = len(vocabulary_file.readlines())
 
-    with open("./data/citeulike-a/mult.dat", "r") as item_info_file :
+    with open("../_data/citeulike-a/mult.dat", "r") as item_info_file :
         n_items = len(item_info_file.readlines())
     
     item_info_matrix = np.zeros((n_items, n_vocabulary))
-    with open("./data/citeulike-a/mult.dat", "r") as item_info_file :
+    with open("../_data/citeulike-a/mult.dat", "r") as item_info_file :
         sentences = item_info_file.readlines()       
         for i, sentence in enumerate(sentences) : 
             words = sentence.strip().split(" ")[1:]
@@ -232,11 +223,11 @@ if __name__ == "__main__" :
                 item_info_matrix[i][int(j)] = int(k)
 
 
-    with open("./data/citeulike-a/users.dat", "r") as user_info_file :
+    with open("../_data/citeulike-a/users.dat", "r") as user_info_file :
         n_users = len(user_info_file.readlines())
 
     rating_matrix = np.zeros((n_users, n_items))
-    with open("./data/citeulike-a/users.dat", "r") as user_info_file :
+    with open("../_data/citeulike-a/users.dat", "r") as user_info_file :
         ratings = user_info_file.readlines()
         for i, rating in enumerate(ratings) :
             items = list(map(int, rating.strip().split(" ")))

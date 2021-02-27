@@ -5,9 +5,31 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 import matplotlib.pyplot as plt
+from matplotlib import style
 import pandas as pd
-from utils import *
 import math
+from tqdm import tqdm
+
+def get_data(data) :
+
+    df = []
+
+    f = open(data, "r")
+    while True :
+        line = f.readline()
+        if not line : 
+            break
+        line = list(map(int, line.split("::")))
+        df.append(line)
+
+    f.close()
+    df = pd.DataFrame(df, columns = ["user_id", "item_id", "rating"])
+
+    # Other Information
+    n_users = max(df["user_id"].values)+1
+    n_items = max(df["item_id"].values)+1
+
+    return df, n_users, n_items
 
 class MLP(nn.Module) :
 
@@ -109,13 +131,12 @@ class AutoRec(nn.Module) :
         for user_id, item_id, rating in list(test_df.values) :
             rmse += (rating - pred_matrix[user_id-1][item_id-1])**2
         rmse = math.sqrt(rmse / size)
-        # print(rmse) # 0.40821710233374997
         return rmse
 
 if __name__ == "__main__" :
 
-    train_data = "./ml-1m/ratings.dat"
-    test_data = "./ml-1m/ratings.dat"
+    train_data = "../_data/ml-1m/train.txt"
+    test_data = "../_data/ml-1m/test.txt"
 
     train_df, n_users, n_items = get_data(train_data)
     # print(train_df)
@@ -135,5 +156,11 @@ if __name__ == "__main__" :
         test_df, n_users, n_items = get_data(test_data)
         
         accuracy.append(autorec.get_performance(test_df))
-    df = pd.DataFrame(accuracy, columns=["accuracy"])
-    df.to_csv("./ml-100k/AutoRec_accuracy(hidden).csv")    
+        print(f"Number of Hidden Units : {hidden}   Accuracy : {accuracy[-1]}")
+
+    style.use("ggplot")
+    plt.plot(hiddens, accuracy, color="mediumpurple", linewidth=2.0, label="U-AutoRec")
+    plt.xlabel("Number of Hidden Units")
+    plt.ylabel("RMSE")
+    plt.legend()
+    plt.savefig("../_plots/AutoRec_performance(User_Linear_ReLU).png")  
