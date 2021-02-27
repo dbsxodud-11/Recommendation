@@ -4,6 +4,8 @@ import logging
 import time
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 class BPR :
     def __init__(self, data_path, n_factor, lr, reg_u, reg_i, reg_j, seed=0) :
@@ -20,6 +22,8 @@ class BPR :
 
     def get_logger(self) :
         self.logger = logging.getLogger("BPR")
+        if len(self.logger.handlers) > 0 :
+            return 
         self.logger.setLevel(logging.DEBUG)
 
         stream_handler = logging.StreamHandler()
@@ -63,7 +67,7 @@ class BPR :
         self.train_csr = sparse.csr_matrix(self.train_matrix)
         self.test_csr = sparse.csr_matrix(self.test_matrix)        
         finish_time = time.time()
-        self.logger.info(f"Split Train and Test Tataset: {finish_time-start_time:.3f}sec")
+        self.logger.info(f"Split Train and Test Dataset: {finish_time-start_time:.3f}sec")
 
     def train(self) :
         self.U = np.random.normal(scale=1.0/self.f, size=(self.matrix.shape[0], self.f))
@@ -92,10 +96,10 @@ class BPR :
 
     def evaluate(self) :
         auc = 0.0
-        for i in range(self.n_users) :
+        for i in range(self.matrix.shape[0]) :
             y_pred = np.matmul(self.U[i], self.I.T)
             y_true = self.matrix[i]
-            if np.sum(y_true) < 0.0 :
+            if np.sum(y_true) <= 0.0 :
                 continue
             auc += roc_auc_score(y_true, y_pred)
         auc /= self.matrix.shape[0]
@@ -104,10 +108,18 @@ class BPR :
 
 if __name__ == "__main__" :
     performance_list = []
-    n_factors = [10]
+    n_factors = [10, 20, 50, 100]
     for n_factor in n_factors :
         bpr = BPR("../_data/ml-100k/", n_factor=n_factor, lr=0.01, reg_u=0.02, reg_i=0.02, reg_j=0.02, seed=99)
         performance = bpr.run()
         performance_list.append(performance)
+
+    style.use("ggplot")
+    plt.plot(performance_list, label="BPR", linewidth=2.0)
+    plt.xlabel("# of factors")
+    plt.ylabel("AUC")
+    plt.title("AUC curve of BPR")
+    plt.legend()
+    plt.savefig("../_plots/BPR(scipy).png")
 
     
